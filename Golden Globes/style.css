@@ -1,0 +1,22 @@
+body {
+    font-family: "Times New Roman", serif;
+    text-align: center;
+    margin-top: 40px;
+  }
+  
+  h1 {
+    font-weight: bold;
+  }
+  
+  .category {
+    color: #660000; /* Rojo vino */
+    font-weight: bold;
+    margin-top: 40px;
+    text-transform: uppercase;
+  }
+  
+  .winner {
+    font-size: 28px;
+    color: #999999; /* Gris claro */
+    margin-top: 10px;
+  }

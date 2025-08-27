@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Golden Globe Winners 2020</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Golden Globe Winners 2020</h1>
+
+  <div class="category">Best Motion Picture - Drama</div>
+  <div class="winner" id="bestdrama"></div>
+
+  <div class="category">Best Motion Picture - Musical or Comedy</div>
+  <div class="winner" id="bestcomedy"></div>
+
+  <div class="category">Best performance by an actress in a motion picture - drama</div>
+  <div class="winner" id="bestactress"></div>
+
+  <div class="category">Best performance by an actor in a motion picture - drama</div>
+  <div class="winner" id="bestactor"></div>
+
+  <script>
+    // Insertar los ganadores dinámicamente
+    document.getElementById("bestdrama").innerHTML = "1917";
+    document.getElementById("bestcomedy").innerHTML = "Once Upon a Time in Hollywood";
+    document.getElementById("bestactress").innerHTML = "Renée Zellweger";
+    document.getElementById("bestactor").innerHTML = "Joaquin Phoenix";
+  </script>
+</body>
+</html>
