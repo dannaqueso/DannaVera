@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Planetas del Sistema Solar</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #000814;
+    color: white;
+    font-family: sans-serif;
+  }
+  #planet {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    transition: background 0.5s;
+  }
+  #name {
+    font-size: 2rem;
+    letter-spacing: 2px;
+  }
+  footer {
+    position: fixed;
+    bottom: 10px;
+    font-size: 14px;
+    color: #ccc;
+  }
+</style>
+</head>
+<body>
+  <div id="planet"></div>
+  <div id="name">Presiona 1–8</div>
+  <footer>Usa las teclas numéricas 1–8 para cambiar de planeta</footer>
+
+<script>
+const planets = [
+  {name: "Mercurio", color: "#a9a9a9"},
+  {name: "Venus", color: "#e1c16e"},
+  {name: "Tierra", color: "#2a9df4"},
+  {name: "Marte", color: "#c1440e"},
+  {name: "Júpiter", color: "#d2b48c"},
+  {name: "Saturno", color: "#deb887"},
+  {name: "Urano", color: "#40e0d0"},
+  {name: "Neptuno", color: "#4169e1"}
+];
+
+const planetDiv = document.getElementById("planet");
+const nameDiv = document.getElementById("name");
+
+window.addEventListener("keydown", e => {
+  if (e.code.startsWith("Digit")) {
+    const num = parseInt(e.code.replace("Digit",""));
+    if (num >= 1 && num <= planets.length) {
+      const p = planets[num-1];
+      planetDiv.style.background = p.color;
+      nameDiv.textContent = p.name;
+    }
+  }
+});
+</script>
+</body>
+</html>
