@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Título de la Página</title>
+    <style>
+        body{
+            background-color: black;
+        text-align: center;
+        }
+        canvas{
+            background-color: rgb(15, 0, 103);
+        }
+    </style>
+    <script>
+        var x=Math.random()*140;
+        var y=Math.random()*190;
+        var dx=2;
+        var dy=2;
+        var img=new Image();
+        img.src="logo_dvd.png";
+        function animate(){
+            requestAnimationFrame(animate);
+            var canvas = document.getElementById("micanvas");
+            var context = canvas.getContext("2d");
+            context.clearRect(0,0, innerWidth,innerHeight);
+            context.drawImage(img,x,y,200,150);
+            if(x>500-200||x<0){
+                dx=-dx
+            }
+              if(y>400-150||y<0){
+                dy=-dy
+            }
+            x+=dx
+            y+=dy
+        }
+        animate()
+    </script>
+</head>
+<body>
+    <canvas id="micanvas" height="400" width="500"></canvas>
+</body>
+</html>
