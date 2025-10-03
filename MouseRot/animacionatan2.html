@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carita sonriente que mira al ratón</title>
+  <style>
+    html,body{height:100%;margin:0;background:#2b1e3b;display:grid;place-items:center}
+    canvas{background:#200f2a;border-radius:12px;box-shadow:0 6px 30px rgba(0,0,0,.6)}
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="480"></canvas>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    const face = {
+      x: canvas.width/2,
+      y: canvas.height/2,
+      r: 100,
+    };
+
+    const pointer = { x: face.x, y: face.y };
+
+    canvas.addEventListener('mousemove',(e)=>{
+      const r = canvas.getBoundingClientRect();
+      pointer.x = e.clientX - r.left;
+      pointer.y = e.clientY - r.top;
+    });
+
+    canvas.addEventListener('touchmove',(e)=>{
+      e.preventDefault();
+      const r = canvas.getBoundingClientRect();
+      const t = e.touches[0];
+      pointer.x = t.clientX - r.left;
+      pointer.y = t.clientY - r.top;
+    },{passive:false});
+
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // cara
+      ctx.beginPath();
+      ctx.arc(face.x, face.y, face.r, 0, Math.PI*2);
+      ctx.fillStyle = '#facc15';
+      ctx.fill();
+      ctx.strokeStyle = '#ca8a04';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // ojos base
+      const eyeOffsetX = 40;
+      const eyeOffsetY = 30;
+      const eyeR = 25;
+
+      // pupilas miran al puntero
+      function drawEye(cx, cy){
+        ctx.beginPath();
+        ctx.arc(cx, cy, eyeR, 0, Math.PI*2);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.stroke();
+
+        const dx = pointer.x - cx;
+        const dy = pointer.y - cy;
+        const ang = Math.atan2(dy, dx);
+
+        const pupilR = 10;
+        const maxOffset = 8;
+        const px = cx + Math.cos(ang) * maxOffset;
+        const py = cy + Math.sin(ang) * maxOffset;
+
+        ctx.beginPath();
+        ctx.arc(px, py, pupilR, 0, Math.PI*2);
+        ctx.fillStyle = '#0f172a';
+        ctx.fill();
+      }
+
+      drawEye(face.x - eyeOffsetX, face.y - eyeOffsetY);
+      drawEye(face.x + eyeOffsetX, face.y - eyeOffsetY);
+
+      // sonrisa
+      ctx.beginPath();
+      ctx.arc(face.x, face.y+20, 60, 0.2*Math.PI, 0.8*Math.PI);
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = '#0f172a';
+      ctx.stroke();
+    }
+
+    function loop(){
+      draw();
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
+</body>
+</html>

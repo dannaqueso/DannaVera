@@ -1,0 +1,88 @@
+<!doctype html>
+ctx.save();
+ctx.translate(ship.x, ship.y);
+ctx.rotate(ship.angle);
+
+
+// Style
+ctx.fillStyle = '#7dd3fc';
+ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+ctx.lineWidth = 1;
+
+
+drawArrow(ctx);
+
+
+ctx.restore();
+
+
+// Draw pointer marker
+ctx.beginPath();
+ctx.arc(pointer.x, pointer.y, 6, 0, Math.PI*2);
+ctx.fillStyle = 'rgba(125,211,252,0.18)';
+ctx.fill();
+ctx.strokeStyle = 'rgba(125,211,252,0.35)';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+
+
+// Draw line from ship to pointer
+ctx.beginPath();
+ctx.moveTo(ship.x, ship.y);
+ctx.lineTo(pointer.x, pointer.y);
+ctx.strokeStyle = 'rgba(125,211,252,0.08)';
+ctx.lineWidth = 2;
+ctx.stroke();
+
+
+updateAngleDisplay();
+}
+
+
+// draw background subtle grid and center cross
+function drawBackgroundGrid(ctx, w, h){
+// soft vignette
+ctx.save();
+const g = ctx.createLinearGradient(0,0,0,h);
+g.addColorStop(0,'rgba(255,255,255,0.01)');
+g.addColorStop(1,'rgba(0,0,0,0.03)');
+ctx.fillStyle = g;
+ctx.fillRect(0,0,w,h);
+ctx.restore();
+
+
+// grid
+ctx.save();
+ctx.lineWidth = 0.5;
+ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+const step = 40;
+for(let x=0;x<w;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+for(let y=0;y<h;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+ctx.restore();
+
+
+// center cross
+ctx.save();
+ctx.translate(w/2, h/2);
+ctx.beginPath(); ctx.moveTo(-16,0); ctx.lineTo(16,0); ctx.moveTo(0,-16); ctx.lineTo(0,16); ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1.2; ctx.stroke();
+ctx.restore();
+}
+
+
+// Start animation after ensuring canvas sizing consistent
+// Resize once more to match css size
+setTimeout(()=>{ resize(); ship.x = canvas.getBoundingClientRect().width/2; ship.y = canvas.getBoundingClientRect().height/2; loop(); }, 50);
+
+
+// Prevent default gesture on touch
+canvas.addEventListener('touchmove', (e)=>{ e.preventDefault(); }, {passive:false});
+
+
+// Make initial pointer in center (CSS coords)
+const rect0 = canvas.getBoundingClientRect();
+pointer.x = rect0.width/2; pointer.y = rect0.height/2;
+
+
+</script>
+</body>
+</html>

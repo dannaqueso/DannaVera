@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Animación Senoidal — Solo Animación (fix)</title>
+<style>
+html,body{height:100%;margin:0;background:#041026;overflow:hidden}
+canvas{display:block;width:100vw;height:100vh}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+
+// Redimensionado robusto: asignamos tanto el tamaño CSS como el tamaño físico
+function resize(){
+const dpr = window.devicePixelRatio || 1;
+// CSS size (lo que ve el layout)
+canvas.style.width = window.innerWidth + 'px';
+canvas.style.height = window.innerHeight + 'px';
+
+
+// tamaño interno en píxeles físicos
+canvas.width = Math.max(300, Math.floor(window.innerWidth * dpr));
+canvas.height = Math.max(200, Math.floor(window.innerHeight * dpr));
+
+
+// resetear transform y escalar una sola vez para mapear coordenadas a CSS pixels
+ctx.setTransform(1,0,0,1,0,0);
+ctx.scale(dpr, dpr);
+}
+window.addEventListener('resize', resize);
+resize();
+
+
+// parámetros fijos de la animación
+let t = 0; // tiempo en segundos
+const PARTICLES = 96;
+const BASE_AMPLITUDE = 90;
+const BASE_FREQ = 1.6;
+const BASE_SIZE = 6;
+const GLOBAL_SPEED = 1.0;
+
+
+// loop con requestAnimationFrame
+let last = performance.now();
+function loop(now){
+const dt = (now - last) / 1000; last = now;
+t += dt * GLOBAL_SPEED;
+
+
+// obtener tamaño en CSS pixels (coordenadas tras ctx.scale)
+const dpr = window.devicePixelRatio || 1;
+const W = canvas.width / dpr;
+const H = canvas.height / dpr;
+
+
+// limpiar y pintar fondo (usamos coordenadas en CSS px)
+ctx.clearRect(0,0,W,H);
+const grad = ctx.createLinearGradient(0,0,0,H);
+grad.addColorStop(0,'#041026');
+grad.addColorStop(1,'#00131b');
+ctx.fillStyle = grad;
+ctx.fillRect(0,0,W,H);
+
+
+// offset horizontal de grupo (onda senoidal)
+const groupX = Math.sin(t * 0.6) * (W * 0.14);
+
+
+const gap = W / Math.max(1, PARTICLES - 1);
+for(let i = 0; i < PARTICLES; i++){
+const xBase = i * gap;
+
+
+// posición vertical: combinación de seno y coseno
+const y = H/2
++ Math.sin(t * BASE_FREQ + i * 0.18) * BASE_AMPLITUDE
++ Math.cos(t * 0.85 + i * 0.09) * (BASE_AMPLITUDE * 0.28);
+
+
+// escala (radio)
+const scale = 1 + 0.62 * Math.cos(t * 1.9 + i * 0.23);
+const radius = Math.max(0.6, BASE_SIZE * scale);
+
+
+// color
+const hueShift = 200 + 42 * Math.cos(t * 0.95 + i * 0.12);
+const r = Math.round(hueShift * 0.9);
+const gCol = Math.round(hueShift * 1.05);
+const b = 255;
+
+
+const alpha = 0.55 + 0.35 * (Math.sin(t * 0.7 + i * 0.18) * 0.5 + 0.5);
+
+
+const x = xBase + groupX;
+
+
+// glow
+ctx.beginPath();
+ctx.fillStyle = `rgba(${r},${gCol},${b},${alpha.toFixed(3)})`;
+ctx.shadowColor = `rgba(120,180,255,${(alpha*0.42).toFixed(3)})`;
+ctx.shadowBlur = Math.min(48, radius * 6);
+ctx.arc(x, y, radius, 0, Math.PI * 2);
+ctx.fill();
+ctx.shadowBlur = 0;
+
+
+// borde
+ctx.beginPath();
+ctx.lineWidth = Math.max(0.5, radius * 0.16);
+ctx.strokeStyle = `rgba(255,255,255,${(0.06 + radius / 70).toFixed(3)})`;
+ctx.arc(x, y, radius * 0.95, 0, Math.PI * 2);
+ctx.stroke();
+}
+
+
+// texto muy sutil
+ctx.fillStyle = 'rgba(255,255,255,0.04)';
+ctx.font = '11px system-ui, -apple-system, Segoe UI';
+ctx.fillText('Animación senoidal — posición y escala moduladas', 12, 18);
+
+
+requestAnimationFrame(loop);
+}
+
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
