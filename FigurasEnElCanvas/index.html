@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Figuras con Canvas — Casita, Honguito, Estrella, Luna, Corazón</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220cc;
+      --accent:#7dd3fc;
+      --muted:#94a3b8;
+    }
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{
+      display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(180deg,#071023 0%, #071723 60%);
+      color:var(--muted);
+      padding:28px;
+      box-sizing:border-box;
+    }
+
+    .wrap{
+      width:100%;max-width:1100px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:20px;
+      align-items:start;
+    }
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 6px 20px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+      display:flex;flex-direction:column;align-items:center;
+    }
+
+    .canvas-wrap{
+      width:100%;display:flex;align-items:center;justify-content:center;
+      padding:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      border-radius:10px;
+    }
+
+    canvas{width:220px;height:220px;border-radius:8px;background:transparent}
+
+    h1{grid-column:1/-1;color:var(--accent);font-weight:600;font-size:20px;margin:0 0 6px 0;text-align:center}
+    p.label{margin:8px 0 0 0;color:var(--muted);font-size:13px}
+
+    footer{grid-column:1/-1;margin-top:6px;text-align:center;font-size:12px;color:#7f9bb3}
+
+    /* responsive tweak */
+    @media (max-width:420px){
+      canvas{width:180px;height:180px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="card">
+      <div class="canvas-wrap"><canvas id="casa" width="440" height="440" aria-label="Canvas Casita"></canvas></div>
+      <p class="label">Casita</p>
+    </div>
+
+    <div class="card">
+      <div class="canvas-wrap"><canvas id="honguito" width="440" height="440" aria-label="Canvas Honguito"></canvas></div>
+      <p class="label">Honguito</p>
+    </div>
+
+    <div class="card">
+      <div class="canvas-wrap"><canvas id="estrella" width="440" height="440" aria-label="Canvas Estrella"></canvas></div>
+      <p class="label">Estrella</p>
+    </div>
+
+    <div class="card">
+      <div class="canvas-wrap"><canvas id="luna" width="440" height="440" aria-label="Canvas Luna"></canvas></div>
+      <p class="label">Luna</p>
+    </div>
+
+    <div class="card">
+      <div class="canvas-wrap"><canvas id="corazon" width="440" height="440" aria-label="Canvas Corazón"></canvas></div>
+      <p class="label">Corazón</p>
+    </div>
+
+  </div>
+
+  <script>
+  // Helper: scale for high-DPI screens
+  function setupCanvas(canvas, logicalWidth, logicalHeight){
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = logicalWidth * dpr;
+    canvas.height = logicalHeight * dpr;
+    canvas.style.width = logicalWidth + 'px';
+    canvas.style.height = logicalHeight + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0); // scale drawing operations
+    return ctx;
+  }
+
+  // --- Dibujar casita ---
+  function drawHouse(ctx, w, h){
+    ctx.clearRect(0,0,w,h);
+    const cx = w/2, cy = h/2;
+
+    // ground
+    ctx.fillStyle = '#042f2e';
+    ctx.fillRect(0, h - 40, w, 40);
+
+    // base
+    const houseW = 140, houseH = 110;
+    const left = cx - houseW/2, top = cy - houseH/2 + 20;
+    ctx.fillStyle = '#ffebcd';
+    roundRect(ctx, left, top, houseW, houseH, 10);
+    ctx.fill();
+    ctx.strokeStyle = '#8b5e34'; ctx.lineWidth = 2; ctx.stroke();
+
+    // roof
+    ctx.beginPath();
+    ctx.moveTo(left - 10, top);
+    ctx.lineTo(cx, top - 70);
+    ctx.lineTo(left + houseW + 10, top);
+    ctx.closePath();
+    ctx.fillStyle = '#b33'; ctx.fill();
+    ctx.stroke();
+
+    // door
+    ctx.fillStyle = '#7b3f00';
+    const doorW = 32, doorH = 56;
+    ctx.fillRect(cx - doorW/2, top + houseH - doorH, doorW, doorH);
+    // window
+    ctx.fillStyle = '#e6f7ff';
+    ctx.fillRect(left + 18, top + 24, 34, 30);
+    ctx.fillRect(left + houseW - 18 - 34, top + 24, 34, 30);
+
+    // chimney
+    ctx.fillStyle = '#7b3f00';
+    ctx.fillRect(left + houseW - 34, top - 38, 16, 34);
+  }
+
+  // rounded rect helper
+  function roundRect(ctx,x,y,w,h,r){
+    const rad = typeof r === 'number' ? r : 8;
+    ctx.beginPath();
+    ctx.moveTo(x+rad,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rad);
+    ctx.arcTo(x+w,y+h,x,y+h,rad);
+    ctx.arcTo(x,y+h,x,y,rad);
+    ctx.arcTo(x,y,x+w,y,rad);
+    ctx.closePath();
+  }
+
+  // --- Honguito (mushroom) ---
+  function drawMushroom(ctx,w,h){
+    ctx.clearRect(0,0,w,h);
+    const cx = w/2, cy = h/2 + 20;
+
+    // stem
+    ctx.fillStyle = '#f6e6d6';
+    roundRect(ctx, cx-24, cy+20, 48, 80, 10);
+    ctx.fill(); ctx.strokeStyle='#caa58a'; ctx.lineWidth=2; ctx.stroke();
+
+    // cap
+    ctx.beginPath();
+    ctx.ellipse(cx, cy-10, 110, 70, 0, Math.PI, 2*Math.PI);
+    ctx.fillStyle = '#d33b5a';
+    ctx.fill(); ctx.strokeStyle='#9a2a3d'; ctx.stroke();
+
+    // cap bottom arc to blend
+    ctx.beginPath();
+    ctx.ellipse(cx, cy+6, 88, 34, 0, Math.PI, 2*Math.PI);
+    ctx.fillStyle = '#b4304a'; ctx.fill();
+
+    // white dots
+    ctx.fillStyle = '#fff';
+    const dots = [[-40,-20],[ -10,-36 ],[30,-26],[55,-6],[-60,-6]];
+    dots.forEach(([dx,dy])=>{ctx.beginPath(); ctx.arc(cx+dx, cy+dy, 12, 0, Math.PI*2); ctx.fill();});
+  }
+
+  // --- Estrella ---
+  function drawStar(ctx,w,h){
+    ctx.clearRect(0,0,w,h);
+    const cx=w/2, cy=h/2;
+    const spikes=5, outer=90, inner=38;
+    let rot = Math.PI/2*3;
+    let x = cx, y = cy;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outer);
+    for(let i=0;i<spikes;i++){
+      x = cx + Math.cos(rot) * outer;
+      y = cy + Math.sin(rot) * outer;
+      ctx.lineTo(x,y);
+      rot += Math.PI / spikes;
+
+      x = cx + Math.cos(rot) * inner;
+      y = cy + Math.sin(rot) * inner;
+      ctx.lineTo(x,y);
+      rot += Math.PI / spikes;
+    }
+    ctx.closePath();
+    // gradient fill
+    const g = ctx.createLinearGradient(cx-60, cy-60, cx+60, cy+60);
+    g.addColorStop(0,'#fff59d'); g.addColorStop(1,'#ffd54f');
+    ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle='#f5b800'; ctx.lineWidth=3; ctx.stroke();
+  }
+
+  // --- Luna (crescent) ---
+  function drawMoon(ctx,w,h){
+    ctx.clearRect(0,0,w,h);
+    const cx=w/2, cy=h/2;
+
+    // sky background with subtle stars
+    ctx.fillStyle='#031428'; ctx.fillRect(0,0,w,h);
+    for(let i=0;i<30;i++){ctx.beginPath(); const sx=Math.random()*w, sy=Math.random()*h; ctx.arc(sx,sy,Math.random()*1.6+0.4,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.fill();}
+
+    // big circle (moon)
+    ctx.beginPath(); ctx.arc(cx+20, cy-10, 70, 0, Math.PI*2); ctx.fillStyle='#f8f5d4'; ctx.fill();
+    // subtract a slightly offset circle to make crescent
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath(); ctx.arc(cx+48, cy-2, 70, 0, Math.PI*2); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+
+    // little craters
+    ctx.fillStyle='rgba(0,0,0,0.06)';
+    ctx.beginPath(); ctx.arc(cx+12, cy-2, 8,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+36, cy+18, 6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx-2, cy+20, 5,0,Math.PI*2); ctx.fill();
+  }
+
+  // --- Corazón ---
+  function drawHeart(ctx,w,h){
+    ctx.clearRect(0,0,w,h);
+    const cx=w/2, cy=h/2 + 10;
+    ctx.beginPath();
+    const topY = cy - 40;
+    ctx.moveTo(cx, topY + 40);
+    ctx.bezierCurveTo(cx + 60, topY - 20, cx + 120, topY + 40, cx, topY + 130);
+    ctx.bezierCurveTo(cx - 120, topY + 40, cx - 60, topY - 20, cx, topY + 40);
+    ctx.closePath();
+    // gradient and shadow
+    const g = ctx.createLinearGradient(cx-60, cy-60, cx+60, cy+60);
+    g.addColorStop(0,'#ff6b81'); g.addColorStop(1,'#ff3b5c');
+    ctx.fillStyle = g; ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.shadowBlur = 0; ctx.strokeStyle='#9b2636'; ctx.lineWidth=2; ctx.stroke();
+  }
+
+  // Initialize all canvases
+  function init(){
+    const canvases = [
+      {id:'casa',fn:drawHouse},
+      {id:'honguito',fn:drawMushroom},
+      {id:'estrella',fn:drawStar},
+      {id:'luna',fn:drawMoon},
+      {id:'corazon',fn:drawHeart}
+    ];
+
+    canvases.forEach(({id,fn})=>{
+      const el = document.getElementById(id);
+      // logical size in CSS pixels (kept square)
+      const size = 220;
+      const ctx = setupCanvas(el, size, size);
+      // draw once; pass ctx and width/height (logical)
+      try{ fn(ctx, size, size); } catch(e){ console.error('Dibujo falló', id, e); }
+    });
+  }
+
+  window.addEventListener('load', init);
+  window.addEventListener('resize', () => { /* opcional: redibujar si quieres */ });
+  </script>
+</body>
+</html>

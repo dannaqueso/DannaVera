@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini Paint — Lienzo simple</title>
+  <style>
+    :root{
+      --bg:#f4e9fb;
+      --panel:#f0d9ffcc;
+      --muted:#5a3b7a;
+      --card:#f3e5ff;
+      --glass: rgba(255,255,255,0.6);
+      --accent:#b388eb;
+    }
+    *{box-sizing:border-box}
+    body{min-height:100vh;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:var(--muted);display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#f5e1ff 0%, #f0d9ff 80%);padding:28px}
+
+    .app{
+      width:100%;max-width:980px;background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));border-radius:14px;padding:18px;box-shadow:0 8px 25px rgba(183,143,255,0.3);border:1px solid rgba(255,255,255,0.6);
+    }
+
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    h1{color:var(--accent);font-size:18px;margin:0}
+    .controls{display:flex;gap:10px;align-items:center}
+
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .palette{display:flex;gap:8px;padding:8px;background:var(--glass);border-radius:10px}
+    .swatch{width:36px;height:36px;border-radius:8px;box-shadow:inset 0 -6px 14px rgba(0,0,0,0.08);cursor:pointer;border:2px solid transparent}
+    .swatch.selected{outline:3px solid rgba(179,136,235,0.5);transform:translateY(-2px)}
+
+    .sizes{display:flex;gap:8px;padding:8px;background:var(--glass);border-radius:10px;align-items:center}
+    .btn{background:transparent;border:1px solid rgba(179,136,235,0.5);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer;transition:all .2s}
+    .btn.primary{background:linear-gradient(180deg,rgba(179,136,235,0.4),rgba(179,136,235,0.2));border-color:rgba(179,136,235,0.5);color:#4a2c6f}
+    .btn:hover{background:rgba(179,136,235,0.15)}
+
+    .canvas-wrap{display:flex;align-items:center;justify-content:center;padding:14px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(245,235,255,0.8))}
+    canvas{background:#fbf7ff;border-radius:8px;touch-action:none}
+
+    footer{margin-top:12px;text-align:center;color:#6f558d;font-size:13px}
+
+    @media (max-width:560px){
+      .palette .swatch{width:30px;height:30px}
+      .sizes .btn{padding:6px 8px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Mini Paint — aplicación de dibujo">
+    <header>
+      <h1>Mini Paint</h1>
+      <div class="controls">
+        <div class="toolbar" role="toolbar" aria-label="Herramientas">
+
+          <div class="palette" role="list" aria-label="Paleta de colores pasteles">
+            <button class="swatch" data-color="#f8c8dc" style="background:#f8c8dc" aria-label="Rosa pastel"></button>
+            <button class="swatch" data-color="#ffd6a5" style="background:#ffd6a5" aria-label="Melocotón"></button>
+            <button class="swatch" data-color="#cbd5ff" style="background:#cbd5ff" aria-label="Azul bebé"></button>
+            <button class="swatch" data-color="#bfe6c7" style="background:#bfe6c7" aria-label="Verde menta"></button>
+            <button class="swatch" data-color="#f6f1c3" style="background:#f6f1c3" aria-label="Amarillo pálido"></button>
+          </div>
+
+          <div class="sizes" aria-label="Grosor de pincel">
+            <button class="btn" data-size="4" aria-label="Grosor pequeño">● 4</button>
+            <button class="btn" data-size="10" aria-label="Grosor medio">● 10</button>
+            <button class="btn" data-size="20" aria-label="Grosor grande">● 20</button>
+          </div>
+
+          <button class="btn" id="eraserBtn" aria-pressed="false" title="Borrador">Borrador</button>
+
+          <button class="btn primary" id="clear">Borrar todo</button>
+
+          <button class="btn" id="save" title="Descargar imagen">Guardar</button>
+
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="canvas-wrap">
+        <canvas id="paint" width="900" height="600" role="img" aria-label="Lienzo de dibujo"></canvas>
+      </div>
+    </main>
+
+    <footer>Interfaz lila pastel — Selecciona un color, elige grosor y pinta con el ratón o el dedo.</footer>
+  </div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('paint');
+  const ctx = canvas.getContext('2d');
+
+  function scaleCanvas(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function fitCanvasToContainer(){
+    const container = canvas.parentElement;
+    canvas.style.width = Math.min(900, container.clientWidth - 16) + 'px';
+    canvas.style.height = Math.min(600, Math.max(300, container.clientHeight + 220)) + 'px';
+    scaleCanvas();
+  }
+
+  window.addEventListener('resize', fitCanvasToContainer);
+  fitCanvasToContainer();
+
+  let drawing = false;
+  let current = { color: '#f8c8dc', size: 4, erasing: false };
+  let lastPos = { x: 0, y: 0 };
+
+  function getPointerPos(e){
+    const rect = canvas.getBoundingClientRect();
+    if(e.touches && e.touches.length) e = e.touches[0];
+    return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) };
+  }
+
+  function startDrawing(e){
+    drawing = true;
+    lastPos = getPointerPos(e);
+    ctx.beginPath();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = current.size;
+    ctx.strokeStyle = current.erasing ? '#fbf7ff' : current.color;
+    ctx.globalCompositeOperation = current.erasing ? 'destination-out' : 'source-over';
+    ctx.moveTo(lastPos.x, lastPos.y);
+    e.preventDefault();
+  }
+
+  function draw(e){
+    if(!drawing) return;
+    const p = getPointerPos(e);
+    const midX = (lastPos.x + p.x) / 2;
+    const midY = (lastPos.y + p.y) / 2;
+    ctx.quadraticCurveTo(lastPos.x, lastPos.y, midX, midY);
+    ctx.stroke();
+    lastPos = p;
+    e.preventDefault();
+  }
+
+  function stopDrawing(e){
+    if(!drawing) return;
+    ctx.stroke();
+    ctx.closePath();
+    drawing = false;
+    e && e.preventDefault();
+  }
+
+  canvas.addEventListener('mousedown', startDrawing);
+  canvas.addEventListener('mousemove', draw);
+  window.addEventListener('mouseup', stopDrawing);
+
+  canvas.addEventListener('touchstart', startDrawing, {passive:false});
+  canvas.addEventListener('touchmove', draw, {passive:false});
+  window.addEventListener('touchend', stopDrawing);
+  window.addEventListener('touchcancel', stopDrawing);
+
+  const swatches = Array.from(document.querySelectorAll('.swatch'));
+  function selectSwatch(el){
+    swatches.forEach(s=>s.classList.remove('selected'));
+    el.classList.add('selected');
+    current.color = el.dataset.color;
+    current.erasing = false;
+    document.getElementById('eraserBtn').setAttribute('aria-pressed','false');
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  if(swatches.length) selectSwatch(swatches[0]);
+  swatches.forEach(s=> s.addEventListener('click', ()=> selectSwatch(s)));
+
+  const sizeBtns = Array.from(document.querySelectorAll('.sizes .btn'));
+  function selectSize(btn){
+    sizeBtns.forEach(b=>b.classList.remove('primary'));
+    btn.classList.add('primary');
+    current.size = Number(btn.dataset.size);
+  }
+  if(sizeBtns.length) selectSize(sizeBtns[1] || sizeBtns[0]);
+  sizeBtns.forEach(b=> b.addEventListener('click', ()=> selectSize(b)));
+
+  const eraserBtn = document.getElementById('eraserBtn');
+  eraserBtn.addEventListener('click', ()=>{
+    current.erasing = !current.erasing;
+    eraserBtn.setAttribute('aria-pressed', String(current.erasing));
+    if(current.erasing){ eraserBtn.classList.add('primary'); } else { eraserBtn.classList.remove('primary'); }
+  });
+
+  const clearBtn = document.getElementById('clear');
+  clearBtn.addEventListener('click', ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); });
+
+  const saveBtn = document.getElementById('save');
+  saveBtn.addEventListener('click', ()=>{
+    const tmp = document.createElement('canvas');
+    const rect = canvas.getBoundingClientRect();
+    tmp.width = Math.round(rect.width);
+    tmp.height = Math.round(rect.height);
+    const tctx = tmp.getContext('2d');
+    tctx.fillStyle = '#fbf7ff'; tctx.fillRect(0,0,tmp.width,tmp.height);
+    tctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
+    const url = tmp.toDataURL('image/png');
+    const a = document.createElement('a'); a.href = url; a.download = 'minipaint.png'; a.click();
+  });
+})();
+</script>
+</body>
+</html>
