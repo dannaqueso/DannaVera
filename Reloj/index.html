@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reloj de Tijuana</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #b794f4; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    canvas {
+      background-color: #ede9fe;
+      border: 10px solid #40215a;
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(61, 14, 100, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="reloj" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("reloj");
+    const ctx = canvas.getContext("2d");
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radio = 150;
+
+
+    const S = 60;
+    const VR3 = (2 * Math.PI / 60) * S;
+    const VR2 = (2 * Math.PI / 3600) * S;
+    const VR1 = (2 * Math.PI / 43200) * S;
+
+
+    function horaTijuana() {
+      const ahora = new Date();
+      const opciones = { timeZone: "America/Tijuana" };
+      return new Date(ahora.toLocaleString("en-US", opciones));
+    }
+
+    const base = horaTijuana();
+    const baseSeg = base.getSeconds();
+    const baseMin = base.getMinutes();
+    const baseHora = base.getHours() % 12;
+    const start = performance.now();
+
+    function dibujarReloj() {
+      const t = (performance.now() - start) / 1000;
+
+
+      const angSeg = ((baseSeg / 60) * 2 * Math.PI) + VR3 * t;
+      const angMin = ((baseMin * 60 + baseSeg) / 3600) * 2 * Math.PI + VR2 * t;
+      const angHora = ((baseHora * 3600 + baseMin * 60 + baseSeg) / 43200) * 2 * Math.PI + VR1 * t;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radio, 0, 2 * Math.PI);
+      ctx.fillStyle = "#c4b5fd"; 
+      ctx.fill();
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = "#6b21a8"; 
+      ctx.stroke();
+
+
+      ctx.strokeStyle = "#4c1d95";
+      for (let i = 0; i < 12; i++) {
+        const ang = i * (Math.PI / 6);
+        const x1 = cx + Math.cos(ang) * (radio - 10);
+        const y1 = cy + Math.sin(ang) * (radio - 10);
+        const x2 = cx + Math.cos(ang) * (radio - 30);
+        const y2 = cy + Math.sin(ang) * (radio - 30);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineWidth = 5;
+        ctx.stroke();
+      }
+
+
+      dibujarManecilla(angHora, radio * 0.5, 8, "#7c3aed");
+      dibujarManecilla(angMin, radio * 0.7, 5, "#a78bfa");
+      dibujarManecilla(angSeg, radio * 0.85, 3, "#ddd6fe");
+
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8, 0, 2 * Math.PI);
+      ctx.fillStyle = "#4c1d95";
+      ctx.fill();
+
+      requestAnimationFrame(dibujarReloj);
+    }
+
+    function dibujarManecilla(angulo, largo, grosor, color) {
+      ctx.beginPath();
+      ctx.lineWidth = grosor;
+      ctx.lineCap = "round";
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(
+        cx + Math.cos(angulo - Math.PI / 2) * largo,
+        cy + Math.sin(angulo - Math.PI / 2) * largo
+      );
+      ctx.strokeStyle = color;
+      ctx.stroke();
+    }
+
+    dibujarReloj();
+  </script>
+</body>
+</html>
