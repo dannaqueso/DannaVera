@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>simulación</title>
+<style>
+  /* Sin texto en la página, solo canvas */
+  html,body { height:100%; margin:0; background:#150022; }
+  canvas { display:block; width:100vw; height:100vh; }
+</style>
+</head>
+<body>
+<canvas id="space"></canvas>
+<script>
+(() => {
+  const canvas = document.getElementById('space');
+  const ctx = canvas.getContext('2d');
+
+  function resize(){
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(window.innerWidth * dpr);
+    canvas.height = Math.round(window.innerHeight * dpr);
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // fondo con estrellas puntitos
+  const STAR_COUNT = 220;
+  let stars = [];
+  function makeStars(){
+    stars = new Array(STAR_COUNT).fill(0).map(()=>({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random()*1.6 + 0.2,
+      a: Math.random()*0.8 + 0.2,
+      tw: Math.random()*0.03 + 0.01
+    }));
+  }
+  makeStars();
+
+  // nave
+  const ship = {
+    x: window.innerWidth/2,
+    y: window.innerHeight/2,
+    vx: 0,
+    vy: 0,
+    angle: 0 // (no se usará, nave fija)
+  };
+
+  const friction = 0.985; // fricción
+  let t = 0;
+
+  // controles (flechas o WASD)
+  const keys = {};
+  window.addEventListener('keydown', e=>{ keys[e.key] = true; });
+  window.addEventListener('keyup', e=>{ keys[e.key] = false; });
+
+  // precalcular colores de luces
+  const lightCount = 10;
+
+  function drawBackground(){
+    // fondo morado oscuro con un suave degradado radial
+    const w = window.innerWidth, h = window.innerHeight;
+    const g = ctx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0, '#1a0033');
+    g.addColorStop(1, '#0c0018');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
+
+    // estrellas
+    for (let s of stars){
+      // parpadeo simple
+      s.a += s.tw;
+      if (s.a > 1 || s.a < 0.1) s.tw *= -1;
+      ctx.globalAlpha = s.a;
+      ctx.beginPath();
+      ctx.fillStyle = '#fff';
+      ctx.arc(s.x / (window.devicePixelRatio||1), s.y / (window.devicePixelRatio||1), s.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawShip(){
+    ctx.save();
+    ctx.translate(ship.x, ship.y);
+    
+
+    
+
+    // platillo principal
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 60, 24, 0, 0, Math.PI*2);
+    ctx.fillStyle = '#cbe9ff';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(102,204,255,0.25)';
+    ctx.stroke();
+
+    // cabina
+    ctx.beginPath();
+    ctx.ellipse(0, -10, 24, 14, 0, 0, Math.PI*2);
+    ctx.fillStyle = '#66ccff';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+    ctx.stroke();
+
+    // sin luces
+    ctx.globalAlpha = 1;
+
+    // pequeño destello en la cabina
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.arc(-6, -14, 4, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function update(dt){
+    t += dt * 0.001; // tiempo en segundos aproximado
+
+    // control usuario - impulso
+    const thrust = 0.18; // fuerza de control
+    if (keys.ArrowUp || keys.w) { ship.vy -= thrust; }
+    if (keys.ArrowDown || keys.s) { ship.vy += thrust; }
+    if (keys.ArrowLeft || keys.a) { ship.vx -= thrust; }
+    if (keys.ArrowRight || keys.d) { ship.vx += thrust; }
+
+    // movimiento automático sutil para variedad (no lo hace incontrolable)
+    ship.vx += 0.02 * Math.cos(t*0.9);
+    ship.vy += 0.02 * Math.sin(t*1.1);
+
+    // aplicar fricción gradual
+    ship.vx *= friction;
+    ship.vy *= friction;
+
+    // actualizar posición
+    ship.x += ship.vx;
+    ship.y += ship.vy;
+
+    // actualizar ángulo según velocidad (ligero)
+    
+
+    // límites con rebote amortiguado
+    const margin = 20;
+    const w = window.innerWidth, h = window.innerHeight;
+    if (ship.x < margin) { ship.x = margin; ship.vx = -ship.vx * 0.3; }
+    if (ship.x > w - margin) { ship.x = w - margin; ship.vx = -ship.vx * 0.3; }
+    if (ship.y < margin) { ship.y = margin; ship.vy = -ship.vy * 0.3; }
+    if (ship.y > h - margin) { ship.y = h - margin; ship.vy = -ship.vy * 0.3; }
+
+    // mantener estrellas en sistema si se redimensiona (opcional)
+    if (stars.length === 0) makeStars();
+  }
+
+  let last = performance.now();
+  function loop(now){
+    const dt = now - last; last = now;
+
+    // redraw
+    drawBackground();
+    update(dt);
+    drawShip();
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
